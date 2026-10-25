@@ -256,6 +256,7 @@ export const reducer = produce((draft: GeneratorState, action: AnyAction) => {
       break;
 
     case actions.RESET_GENERATOR: {
+      draft.savedSnapshot = undefined;
       draft.rows = {};
       draft.sortedRows = [];
       draft.showClearPageDialog = false;

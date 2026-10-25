@@ -97,3 +97,15 @@ test('logout cancellation keeps the session and draft and sends no server reques
  expect(confirm).toHaveBeenCalled(); expect(mutate).not.toHaveBeenCalled();
  expect(dispatch).not.toHaveBeenCalled(); confirm.mockRestore();
 });
+
+test.each(['new','current','rename'])('late %s response cannot change a different dataset context',async kind=>{
+ let finish:(value:any)=>void=()=>{};
+ mutate.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ let state={generator:{currentDataSet:{dataSetId:42}}};
+ const action=kind==='new'?saveNewDataSet('Old draft'):kind==='rename'?renameDataSet('Old name'):saveCurrentDataSet();
+ const pending=action(dispatch,()=>state);
+ state={generator:{currentDataSet:{dataSetId:99}}};
+ finish({data:{saveNewDataSet:{success:true,dataSetId:'43'},saveDataSet:{success:true,savedDate:'1'},renameDataSet:{success:true}}});
+ await pending;
+ expect(dispatch).not.toHaveBeenCalled();
+});

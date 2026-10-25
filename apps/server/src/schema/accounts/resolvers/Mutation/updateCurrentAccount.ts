@@ -17,7 +17,7 @@ export const updateCurrentAccount: NonNullable<MutationResolvers['updateCurrentA
   }
 
   const { firstName, lastName, email, country, region } = args;
-  userRecord.update({
+  await userRecord.update({
     firstName,
     lastName,
     email,

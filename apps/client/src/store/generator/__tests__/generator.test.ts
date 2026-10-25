@@ -234,3 +234,10 @@ describe('misc selectors', () => {
     // });
   });
 });
+
+test('clearing a saved generator resets its saved checkpoint',()=>{
+ const store=createStore(generatorReducer);
+ store.dispatch({type:'SET_CURRENT_DATA_SET',payload:{dataSetId:7,dataSetName:'Saved',savedSnapshot:'old snapshot'}});
+ store.dispatch({type:actions.RESET_GENERATOR,payload:{exportTypeInitialStates:{}}});
+ expect(store.getState().savedSnapshot).toBeUndefined();
+});

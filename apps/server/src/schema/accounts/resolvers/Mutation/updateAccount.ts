@@ -1,7 +1,6 @@
 import type { MutationResolvers, AccountStatus } from './../../../types.generated';
 import { db } from '../../../../database';
 import * as authUtils from '../../../../utils/authUtils';
-import * as dateFns from 'date-fns';
 
 export const updateAccount: NonNullable<MutationResolvers['updateAccount']> = async (_parent, args, { token, user }) => {
   if (!authUtils.authenticate(token)) {
@@ -32,7 +31,7 @@ export const updateAccount: NonNullable<MutationResolvers['updateAccount']> = as
 
   // "disabled" trumps "expired", otherwise the UI looks weird (you disable something but it never appears that way)
   if (expiryDate && validatedAccountStatus !== 'disabled') {
-    const now = Number(dateFns.format(new Date(), 't'));
+    const now = Date.now();
 
     if (parseInt(expiryDate, 10) < now) {
       validatedAccountStatus = 'expired';
@@ -44,7 +43,7 @@ export const updateAccount: NonNullable<MutationResolvers['updateAccount']> = as
     expiryDateMs = parseInt(expiryDate, 10);
   }
 
-  userRecord.update({
+  await userRecord.update({
     accountStatus: validatedAccountStatus,
     firstName,
     lastName,
