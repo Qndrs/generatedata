@@ -15,7 +15,7 @@ export const logout: NonNullable<MutationResolvers['logout']> = async (_parent, 
   });
 
   if (user) {
-    user.update({
+    await user.update({
       refreshToken: null,
       oneTimePassword: null
     });

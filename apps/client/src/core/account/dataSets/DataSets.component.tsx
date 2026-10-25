@@ -1,3 +1,4 @@
+import { enqueueSnackbar } from 'notistack';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { SecondaryButton, useSharedClasses } from '@generatedata/shared';
 import { DataSetListItem } from '../../../../types/dataSets';
@@ -60,7 +61,7 @@ const DataSets = ({ onLoadDataSet, locale, i18n, currentDataSetId, className = '
   const [sortDir, setSortDir] = useState<ColSortDir>('ASC');
   const sharedClasses = useSharedClasses();
 
-  const { data } = useQuery(queries.GET_DATA_SETS, {
+  const { data, loading, error, refetch } = useQuery(queries.GET_DATA_SETS, {
     fetchPolicy: 'cache-and-network',
     variables: {
       offset: (currentPage - 1) * NUM_PER_PAGE,
@@ -92,7 +93,12 @@ const DataSets = ({ onLoadDataSet, locale, i18n, currentDataSetId, className = '
         }
       }
     ],
-    onCompleted: () => {
+    onError: () => enqueueSnackbar(i18n.operationUnconfirmed, { variant: 'error' }),
+    onCompleted: (response) => {
+      if (!response?.deleteDataSet?.success) {
+        enqueueSnackbar(i18n.operationRejected, { variant: 'error' });
+        return;
+      }
       setDeleteDialogVisibility(false);
 
       if (currentDataSetId) {
@@ -106,10 +112,13 @@ const DataSets = ({ onLoadDataSet, locale, i18n, currentDataSetId, className = '
     }
   });
 
-  // show spinner here
-  if (!data || !data.dataSets) {
-    return null;
+  if (error || (!loading && !data?.dataSets)) {
+    return <section role="alert">
+      <p>{error ? i18n.connectionUnavailable : i18n.operationRejected}</p>
+      <SecondaryButton onClick={() => { void refetch().catch(() => {}); }}>{i18n.retryRequest}</SecondaryButton>
+    </section>;
   }
+  if (!data?.dataSets) return <p role="status">{i18n.loading}</p>;
 
   const onShowDeleteDialog = (dataSet: DataSetListItem): void => {
     selectDataSet(dataSet);

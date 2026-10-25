@@ -20,6 +20,26 @@ import { SelectedAccountsTab, SelectedAccountTab } from '~types/account';
 import type { GDAction } from '~types/general';
 import { apolloClient } from '../../core/apolloClient';
 
+const pendingMutations = new Set<string>();
+const accountMutation = async (options: any): Promise<any> => {
+  const key = options.mutation.loc?.source.body || String(options.mutation);
+  if (pendingMutations.has(key)) return { data: null };
+  pendingMutations.add(key);
+  try {
+    const response = await apolloClient.mutate(options);
+    if (!response.data || Object.values(response.data).some((result: any) => result?.success === false)) {
+      enqueueSnackbar(getStrings().core.operationRejected, { variant: 'error' });
+      return { data: null };
+    }
+    return response;
+  } catch {
+    enqueueSnackbar(getStrings().core.operationUnconfirmed, { variant: 'error', preventDuplicate: true });
+    return { data: null };
+  } finally {
+    pendingMutations.delete(key);
+  }
+};
+
 export const UPDATE_ACCOUNT = 'UPDATE_ACCOUNT';
 export const updateAccount = (data: AccountEditingData): GDAction => ({
   type: UPDATE_ACCOUNT,
@@ -84,11 +104,12 @@ export const saveYourAccount =
 
       const { firstName, lastName, email, country, region } = getEditingData(getState());
 
-      await apolloClient.mutate({
+      const response = await accountMutation({
         mutation: SAVE_CURRENT_ACCOUNT,
         variables: { firstName, lastName, email, country, region }
       });
 
+      if (!response.data?.updateCurrentAccount?.success) return;
       enqueueSnackbar(i18n.core.yourAccountUpdated, { variant: 'success' });
       dispatch(yourAccountUpdated());
     };
@@ -107,7 +128,7 @@ export const saveAccount =
         cleanExpiryDate = expiryDate;
       }
 
-      await apolloClient.mutate({
+      const response = await accountMutation({
         mutation: SAVE_ACCOUNT,
         variables: {
           accountId,
@@ -121,6 +142,7 @@ export const saveAccount =
         }
       });
 
+      if (!response.data?.updateAccount?.success) return;
       enqueueSnackbar(i18n.core.userAccountUpdated, { variant: 'success' });
 
       dispatch(onChangeAccountsTab('accounts'));
@@ -138,7 +160,7 @@ export const savePassword =
     async (dispatch: Dispatch): Promise<any> => {
       const i18n = getStrings();
 
-      const { data } = await apolloClient.mutate({
+      const { data } = await accountMutation({
         mutation: UPDATE_PASSWORD,
         variables: { currentPassword, newPassword }
       });
@@ -175,7 +197,7 @@ export const saveNewDataSet =
       const i18n = getStrings();
       const data: any = getDataSetSavePackage(getState());
 
-      const response = await apolloClient.mutate({
+      const response = await accountMutation({
         mutation: SAVE_NEW_DATA_SET,
         variables: {
           dataSetName,
@@ -188,6 +210,7 @@ export const saveNewDataSet =
           type: SET_CURRENT_DATA_SET,
           payload: {
             dataSetName,
+            savedSnapshot: JSON.stringify(data),
             dataSetId: parseInt(response.data.saveNewDataSet.dataSetId as string, 10)
           }
         });
@@ -196,14 +219,15 @@ export const saveNewDataSet =
         enqueueSnackbar(i18n.core.dataSetSaved, { variant: 'success' });
       }
 
-    // TODO error handling
+    // Failed requests deliberately leave the dialog and generator intact.
     };
 
 export const UPDATE_CURRENT_DATA_SET_LAST_SAVED = 'UPDATE_CURRENT_DATA_SET_LAST_SAVED';
-export const updateCurrentDataSetLastSaved = (lastSaved: any): GDAction => ({
+export const updateCurrentDataSetLastSaved = (lastSaved: any, savedSnapshot?: string): GDAction => ({
   type: UPDATE_CURRENT_DATA_SET_LAST_SAVED,
   payload: {
-    lastSaved
+    lastSaved,
+    savedSnapshot
   }
 });
 
@@ -217,7 +241,7 @@ export const saveCurrentDataSet =
       const data: any = getDataSetSavePackage(state);
       const dataSetId = getCurrentDataSetId(state);
 
-      const response = await apolloClient.mutate({
+      const response = await accountMutation({
         mutation: SAVE_CURRENT_DATA_SET,
         variables: {
           dataSetId,
@@ -226,7 +250,7 @@ export const saveCurrentDataSet =
       });
 
       if (response?.data?.saveDataSet?.success) {
-        dispatch(updateCurrentDataSetLastSaved(response.data.saveDataSet.savedDate));
+        dispatch(updateCurrentDataSetLastSaved(response.data.saveDataSet.savedDate, JSON.stringify(data)));
         enqueueSnackbar(successMessage, { variant: 'success' });
       }
     };
@@ -237,7 +261,7 @@ export const renameDataSet =
     async (dispatch: Dispatch, getState: any): Promise<any> => {
       const dataSetId = getCurrentDataSetId(getState());
 
-      const { data } = await apolloClient.mutate({
+      const { data } = await accountMutation({
         mutation: RENAME_DATA_SET,
         variables: {
           dataSetId,
@@ -252,6 +276,7 @@ export const renameDataSet =
             dataSetName
           }
         });
+        enqueueSnackbar(getStrings().core.dataSetNameUpdated, { variant: 'success' });
       }
     };
 
@@ -263,7 +288,7 @@ export const createAccount =
       const accountStatus = getAccountStatus(disabled, expiryDate);
 
       const expiryDateValue = expiry && expiry !== 'none' ? expiryDate.toString() : null;
-      const response = await apolloClient.mutate({
+      const response = await accountMutation({
         mutation: CREATE_USER_ACCOUNT,
         variables: {
           firstName,
@@ -280,8 +305,6 @@ export const createAccount =
       if (response?.data?.createUserAccount?.success) {
         dispatch(onChangeAccountsTab('accounts'));
         enqueueSnackbar(i18n.core.accountCreatedDesc, { variant: 'success' });
-      } else {
-        enqueueSnackbar(i18n.core.errorCreatingAccount, { variant: 'error' });
       }
     };
 

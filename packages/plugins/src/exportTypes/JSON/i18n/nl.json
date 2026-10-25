@@ -1,7 +1,7 @@
 {
-	"COL_TITLE": "Eigendomsnaam",
+	"COL_TITLE": "Veldnaam",
 	"EXPORT_TYPE_NAME": "JSON",
 	"complex": "Complex",
-	"dataStructureFormat": "Datastructuur format",
+	"dataStructureFormat": "Datastructuur",
 	"simple": "Eenvoudig"
 }

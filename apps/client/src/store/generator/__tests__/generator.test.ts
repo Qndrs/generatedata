@@ -65,16 +65,16 @@ describe('generator section', () => {
     expect(selectors.isGridVisible(store.getState())).toEqual(true);
   });
 
-  it('layout is vertical by default', () => {
-    expect(selectors.getGeneratorLayout(store.getState())).toEqual('vertical');
+  it('layout is horizontal by default', () => {
+    expect(selectors.getGeneratorLayout(store.getState())).toEqual('horizontal');
   });
 
-  it('toggling the layout', () => {
-    store.dispatch(actions.toggleLayout());
-    expect(selectors.getGeneratorLayout(store.getState())).toEqual('horizontal');
-
+  it('toggling the layout switches to vertical and back to horizontal', () => {
     store.dispatch(actions.toggleLayout());
     expect(selectors.getGeneratorLayout(store.getState())).toEqual('vertical');
+
+    store.dispatch(actions.toggleLayout());
+    expect(selectors.getGeneratorLayout(store.getState())).toEqual('horizontal');
   });
 
   it('sets the default number of rows to 5', () => {

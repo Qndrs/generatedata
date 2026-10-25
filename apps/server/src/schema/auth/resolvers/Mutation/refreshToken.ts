@@ -10,13 +10,13 @@ export const refreshToken: NonNullable<MutationResolvers['refreshToken']> = asyn
 
   const oldRefreshToken = req.cookies.refreshToken;
   const user = await db.accounts.findOne({
-    attributes: ['accountId', 'accountType', 'firstName', 'email', 'lastName', 'country', 'region', 'dateCreated', 'expiryDate'],
+    attributes: ['accountId', 'accountType', 'accountStatus', 'firstName', 'email', 'lastName', 'country', 'region', 'dateCreated', 'expiryDate'],
     where: {
       refreshToken: oldRefreshToken
     }
   });
 
-  if (!user) {
+  if (!user || user.dataValues.accountStatus !== 'live' || (user.dataValues.expiryDate && new Date(user.dataValues.expiryDate).getTime() < Date.now())) {
     return { success: false };
   }
 

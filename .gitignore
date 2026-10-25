@@ -11,3 +11,32 @@ dist/
 .turbo
 *storybook.log
 storybook-static
+
+# Local runtime, credentials and generated test artifacts
+.env.*
+!.env.example
+!*.env.example
+secrets/
+backups/
+outputs/
+coverage/
+*.sql.gz
+*.dump
+*.bak
+trial-init.sql
+login.json
+trial.env
+
+# Build logs are local artifacts
+*.log
+
+admin.json
+runtime.env
+test-users.json
+
+# Local legacy trial helpers
+tools/check-persistence.cjs
+tools/Dockerfile.generatedata-api-fix
+tools/Dockerfile.generatedata-local-fixes
+tools/Dockerfile.generatedata-trial-fast
+tools/generatedata-trial-smoke.cjs

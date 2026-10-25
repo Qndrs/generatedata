@@ -9,6 +9,7 @@ export const login: NonNullable<MutationResolvers['login']> = async (_parent, { 
     attributes: [
       'accountId',
       'accountType',
+      'accountStatus',
       'password',
       'oneTimePassword',
       'firstName',
@@ -23,7 +24,7 @@ export const login: NonNullable<MutationResolvers['login']> = async (_parent, { 
     }
   });
 
-  if (!user) {
+  if (!user || user.dataValues.accountStatus !== 'live') {
     return { success: false };
   }
 

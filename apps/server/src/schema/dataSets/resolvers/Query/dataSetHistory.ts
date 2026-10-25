@@ -48,7 +48,7 @@ export const dataSetHistory: NonNullable<QueryResolvers['dataSetHistory']> = asy
   )) as any[];
 
   return {
-    totalCount: (totalCountQuery[0] as any).c,
+    totalCount: Number(totalCountQuery.c),
     results: results.map((row: any) => ({
       dataSetId: row.dataset_id,
       historyId: row.history_id,

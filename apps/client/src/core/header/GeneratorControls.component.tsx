@@ -1,6 +1,6 @@
+import { enqueueSnackbar } from 'notistack';
 import { useMutation } from '@apollo/client/react';
 import { HtmlTooltip } from '@generatedata/shared';
-import { enqueueSnackbar } from 'notistack';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { Divider, IconButton, List, ListItemButton, ListItemText } from '@mui/material';
 import { useMeasure } from '@uidotdev/usehooks';
@@ -56,7 +56,12 @@ const GeneratorControls = ({
 
   const [deleteDataSet] = useMutation(DELETE_DATA_SET, {
     refetchQueries: [{ query: queries.GET_DATA_SETS }],
-    onCompleted: () => {
+    onError: () => enqueueSnackbar(i18n.operationUnconfirmed, { variant: 'error' }),
+    onCompleted: (response) => {
+      if (!response?.deleteDataSet?.success) {
+        enqueueSnackbar(i18n.operationRejected, { variant: 'error' });
+        return;
+      }
       setDeleteDialogVisibility(false);
       onClearGrid();
     }
@@ -79,7 +84,6 @@ const GeneratorControls = ({
     // @ts-ignore-line
     inputFieldRef.current?.blur();
 
-    enqueueSnackbar(i18n.dataSetNameUpdated, { variant: 'success' });
   };
 
   const onKeyUp = (e: any): void => {
