@@ -48,4 +48,3 @@ De compatibiliteits- en hersteltest van stap 3 is afgerond. Beslis apart over om
 
 ## Latere actieve omschakeling
 Robert heeft na deze proeven afzonderlijk akkoord gegeven. De actieve instantie op 19091 draait inmiddels op MariaDB 11.4.13 in een nieuw volume, met behouden oud volume en laatste back-up. Het actuele uitvoerings- en testrapport staat in DATABASE-CUTOVER-2026-10-25.md; eerdere vermeldingen van een wachtend omschakelakkoord beschrijven de voorgaande situatie.
-

@@ -28,4 +28,3 @@ Lees eerst dit bestand, PROJECT.md en CONTRIBUTING.md. Deze instructies zijn zel
 
 ## Lokale runtime
 Gebruik uitsluitend Dockerfile, compose.yaml en tools/local.mjs als canonieke route. Lees docs/LOCAL-INSTALL.md. Elke instantie heeft een eigen configuratie en volume; de oude proef mag niet worden overschreven. Geen volume verwijderen of configuratie regenereren wanneer gegevens behouden moeten blijven. Houd publieke config/ gescheiden van echte runtime-secrets.
-

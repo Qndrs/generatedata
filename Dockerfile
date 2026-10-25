@@ -18,4 +18,3 @@ COPY apps/server/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/client/dist /usr/share/nginx/html
 FROM build AS api
 CMD ["node", "tools/start-server.cjs"]
-

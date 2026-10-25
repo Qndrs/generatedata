@@ -12,7 +12,7 @@ Zelfstandige applicatieontwikkeling, lokale configuratie, tests en voorbereiding
 
 ## Architectuur en besluiten
 
-- Basis: Generatedata 5.0.0-beta4, upstreamcommit 3cc52e0f10b4fa523e4369417667dfa94686f94d. Volledige upstreamgeschiedenis en lokale branch codex/project-bootstrap behouden; origin verwijst naar de publieke fork Qndrs/generatedata. Eigen wijzigingen worden via codex/project-bootstrap en een pull request tegen master gepubliceerd.
+- Basis: Generatedata 5.0.0-beta4, upstreamcommit 3cc52e0f10b4fa523e4369417667dfa94686f94d. Volledige upstreamgeschiedenis en lokale branch codex/project-bootstrap behouden; origin verwijst naar de publieke fork Qndrs/generatedata. De wijzigingen staan op codex/project-bootstrap en worden via pull request #1 tegen master beoordeeld.
 - Node 24, pnpm 10.31.0, TypeScript/React, GraphQL, nginx en MariaDB. apps/client en apps/server, gedeelde onderdelen onder packages.
 - Canonieke lokale route: Dockerfile, compose.yaml en tools/local.mjs. Build gebruikt officiële basisimages en het lockbestand, geen oude applicatie-images.
 - Publieke instellingen onder config/; runtime-secrets en admin.json buiten de repository. Loginmodus en Nederlandse interface. /graphql via dezelfde origin; database/API alleen intern.
@@ -82,4 +82,4 @@ WORKING-AGREEMENTS.md, standards/DOCUMENTATION.md en standards/SHARED_GIT_COLLAB
 
 - Robert heeft publicatie via een ontwikkelbranch en pull request en verificatie van GitHub-CI expliciet geaccordeerd. Branch: codex/project-bootstrap; doelbranch: master van Qndrs/generatedata.
 - Publicatiemanifest vóór de commit opnieuw gecontroleerd; alleen de bedoelde bron, configuratieprofielen, tests en documentatie worden opgenomen. Privécredentials en lokale uitvoer blijven uitgesloten; commitidentiteit gebruikt GitHub-noreply.
-- Actuele review en CI-status: https://github.com/Qndrs/generatedata/pulls en https://github.com/Qndrs/generatedata/actions/workflows/quality.yml. Geen merge, deployment of productieverbinding onderdeel van deze publicatiestap.
+- Actuele review en CI-status: https://github.com/Qndrs/generatedata/pull/1 en https://github.com/Qndrs/generatedata/actions/workflows/quality.yml. Geen merge, deployment of productieverbinding onderdeel van deze publicatiestap.

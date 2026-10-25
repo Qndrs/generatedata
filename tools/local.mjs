@@ -66,5 +66,3 @@ else {
     default: throw Error('Commands: quality, setup, build [--no-cache], up, stop, down, status, test, backup, restore, snapshot');
   }
 }
-
-

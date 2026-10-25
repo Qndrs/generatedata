@@ -49,4 +49,3 @@ Gebruik voor browserproeven geen tweede poort met dezelfde browserhost als een a
 Dit vraagt een aparte expliciete opdracht: korte schrijfpauze, een laatste back-up, herstel naar een nieuw 11.4-volume, inhoudscontrole, hervatten en applicatietests. Het oude 10.5-volume en de originele back-up blijven behouden. Wijzig niet alleen het image bovenop een bestaand 10.5-volume. Een downgrade van een 11.4-dump naar 10.5 is niet getest; gebruik bij terugval het bewaarde oude volume/de oorspronkelijke back-up.
 
 De eerste stap-3-proeven lieten de actieve instantie ongemoeid. Na een apart expliciet akkoord is de actieve omschakeling alsnog uitgevoerd; zie DATABASE-CUTOVER-2026-10-25.md. Voor toekomstige omschakelingen blijft afzonderlijke autorisatie nodig.
-
