@@ -1,15 +1,18 @@
-// import bcrypt from 'bcryptjs'; // TODO was bcrypt
 import clientConfig from '@generatedata/config/clientConfig';
 import { SignInWithGoogleButton, initGoogleAuth } from '~core/auth/google/google';
 
-// TODO
-// refresh the token 1 minute before it expires
-export const setAuthTokenRefresh = (tokenExpiry: number, onRefresh: any): void => {
-  const oneMinFromExpiry = clientConfig.auth.GD_JWT_LIFESPAN_MINS * 60 * 1000 - 60 * 1000;
-  const timeout = setTimeout((): void => {
-    clearTimeout(timeout);
+let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+export const clearAuthTokenRefresh = (): void => {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = undefined;
+};
+export const setAuthTokenRefresh = (_tokenExpiry: number, onRefresh: any): void => {
+  clearAuthTokenRefresh();
+  const delay = Math.max(1000, clientConfig.auth.GD_JWT_LIFESPAN_MINS * 60000 - 60000);
+  refreshTimer = setTimeout(() => {
+    refreshTimer = undefined;
     onRefresh();
-  }, oneMinFromExpiry);
+  }, delay);
 };
 
 export const initAuthVendors = (): void => {

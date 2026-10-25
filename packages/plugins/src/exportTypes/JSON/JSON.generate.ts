@@ -19,7 +19,7 @@ const maybeEnquote = (value: any) => {
   }
   const isValidNumber = isNumeric && !startsWithZero;
   if (!isValidNumber && !isJavascriptBoolean(value)) {
-    value = `"${value}"`;
+    value = JSON.stringify(String(value));
   }
 
   return value;
@@ -44,20 +44,20 @@ const generateSimple = (generationData: ETMessageData, stripWhitespace: boolean)
     comma = '';
 
     generationData.columns.forEach(({ title, metadata }: any, colIndex: number) => {
-      const propName: string = title.replace(/"/, '"');
+      const propName: string = JSON.stringify(title);
 
       let value = row[colIndex];
 
       // if a DT has explicitly said it's a string, use a string
       if (metadata && metadata.general && metadata.general.dataType && metadata.general.dataType === 'string') {
-        value = `"${value}"`;
+        value = JSON.stringify(String(value));
 
         // otherwise, do a safety check and encase it in double quote if necessary
       } else {
         value = maybeEnquote(value);
       }
 
-      content += `${comma}${newline}${tab}${tab}"${propName}":${space}${value}`;
+      content += `${comma}${newline}${tab}${tab}${propName}:${space}${value}`;
       comma = ',';
     });
 
@@ -77,10 +77,10 @@ const generateComplex = (generationData: ETMessageData, stripWhitespace: boolean
 
   if (generationData.isFirstBatch) {
     if (stripWhitespace) {
-      const cols = `"${colTitles.join('","')}"`;
+      const cols = colTitles.map((title) => JSON.stringify(title)).join(',');
       content += `{"cols":[${cols}],"data":[`;
     } else {
-      const cols = `"${colTitles.join('",\n\t\t"')}"`;
+      const cols = colTitles.map((title) => JSON.stringify(title)).join(',\n\t\t');
       content += `{\n\t"cols": [\n\t\t${cols}\n\t],\n\t"data": [\n`;
     }
   }
@@ -97,7 +97,7 @@ const generateComplex = (generationData: ETMessageData, stripWhitespace: boolean
     if (stripWhitespace) {
       const rowVals = rowValsArr.join(',');
       content += `[${rowVals}]`;
-      if (rowIndex < numRows - 1) {
+      if (rowIndex < numRows - 1 || !generationData.isLastBatch) {
         content += ',';
       }
     } else {

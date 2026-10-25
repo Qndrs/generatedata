@@ -35,7 +35,7 @@ const server = new ApolloServer<RequestContext>({
     }),
     express.json(),
 
-    // @ts-expect-error
+
     expressMiddleware(server, {
       context: async ({ req, res }) => {
         const authHeader = Array.isArray(req.headers.authorization) ? req.headers.authorization[0] : req.headers.authorization || '';

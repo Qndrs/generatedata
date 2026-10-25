@@ -14,7 +14,7 @@ export type SaveDataSetDialogProps = {
   showRegistration: boolean;
   onRedirectToLogin: () => void;
   onClose: any;
-  onSave: (dataSetName: string) => void;
+  onSave: (dataSetName: string) => void | Promise<any>;
   i18n: any;
 };
 
@@ -32,6 +32,9 @@ const SaveDataSetDialog = ({
   const classNames = useClasses();
 
   const newDataSetNameField = useRef<HTMLInputElement>(null);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const close = () => { if (!savingRef.current) onClose(); };
   const [newDataSetName, setNewDataSetName] = useState('');
   const [newDataSetNameError, setNewDataSetErrorName] = useState('');
 
@@ -44,6 +47,8 @@ const SaveDataSetDialog = ({
   let content = (
     <div className={classNames.newDataSet}>
       <TextField
+        throttle={false}
+        disabled={saving}
         ref={newDataSetNameField}
         error={newDataSetNameError}
         placeholder={i18n.dataSetName}
@@ -57,15 +62,22 @@ const SaveDataSetDialog = ({
     </div>
   );
 
-  const saveDataSet = (e: any): void => {
+  const saveDataSet = async (e: any): Promise<void> => {
     e.preventDefault();
+    if (savingRef.current) return;
 
     if (!newDataSetName.trim()) {
       setNewDataSetErrorName(i18n.missingDataSetName);
       newDataSetNameField.current!.focus();
     } else {
-      onSave(newDataSetName);
-      // TODO loading spinner
+      savingRef.current = true;
+      setSaving(true);
+      try {
+        await onSave(newDataSetName.trim());
+      } finally {
+        savingRef.current = false;
+        setSaving(false);
+      }
     }
   };
 
@@ -74,7 +86,7 @@ const SaveDataSetDialog = ({
     navigate('/register');
   }, []);
 
-  let buttons = <PrimaryButton type="submit">{i18n.save}</PrimaryButton>;
+  let buttons = <PrimaryButton type="submit" disabled={saving}>{saving ? i18n.savingDataSet : i18n.save}</PrimaryButton>;
 
   if (!isLoggedIn) {
     title = i18n.pleaseLogin;
@@ -94,10 +106,10 @@ const SaveDataSetDialog = ({
   }
 
   return (
-    <Dialog onClose={onClose} open={visible} TransitionProps={{ onExited }}>
+    <Dialog onClose={close} open={visible} TransitionProps={{ onExited }}>
       <form onSubmit={saveDataSet}>
         <div style={{ width: 420 }}>
-          <DialogTitle onClose={onClose}>{title}</DialogTitle>
+          <DialogTitle onClose={close}>{title}</DialogTitle>
           <DialogContent dividers className={classNames.contentPanel}>
             {content}
           </DialogContent>

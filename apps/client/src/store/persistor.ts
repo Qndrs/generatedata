@@ -1,3 +1,7 @@
+import { enqueueSnackbar } from 'notistack';
+import { getStrings } from '@generatedata/utils/lang';
+import { writeDraft } from './draftStorage';
+let storageWarningShown = false;
 import { GeneratorState, getInitialState as getGeneratorInitialState } from './generator/generator.reducer';
 import { getInitialState as getAccountInitialState } from './account/account.reducer';
 import { MainState, getInitialState as getMainInitialState } from './main/main.reducer';
@@ -23,6 +27,7 @@ export const persistStore = (store: any) => {
 
   const persistedGenerator: GeneratorState = {
     ...getGeneratorInitialState(),
+    savedSnapshot: generator.savedSnapshot,
     exportType: generator.exportType,
     rows: generator.rows,
     sortedRows: generator.sortedRows,
@@ -57,5 +62,12 @@ export const persistStore = (store: any) => {
     packets: packetsPersistor
   };
 
-  localStorage.setItem('generatedata', JSON.stringify(data));
+  if (!writeDraft(data)) {
+    if (!storageWarningShown && main.localeFileLoaded) {
+      enqueueSnackbar(getStrings().core.localStorageUnavailable, { variant: 'warning', persist: true });
+      storageWarningShown = true;
+    }
+  } else {
+    storageWarningShown = false;
+  }
 };

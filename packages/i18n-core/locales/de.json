@@ -325,5 +325,15 @@
 	"yes": "Ja",
 	"yourAccount": "Ihr Konto",
 	"yourAccountUpdated": "Ihr Benutzerkonto wurde aktualisiert.",
-	"yourUserAccount": "Ihr Benutzerkonto"
+	"yourUserAccount": "Ihr Benutzerkonto",
+	"operationRejected": "The change was not saved. Check your login and permissions. Your input has been kept.",
+	"operationUnconfirmed": "Saving could not be confirmed. Your input has been kept. Check your datasets when the connection returns before saving again.",
+	"savingDataSet": "Saving…",
+	"sessionEnded": "Your session has expired. Your generator settings have been kept. Log in again to save.",
+	"connectionUnavailable": "Cannot connect to the server. Your generator settings have been kept. Try again when the connection returns.",
+	"logoutUnconfirmed": "You have been logged out locally. The server could not confirm ending the session.",
+	"contactAdministrator": "Contact the administrator for an account or a new temporary password. Email password recovery is not configured here.",
+	"localStorageUnavailable": "Your browser cannot keep a local draft. Keep this page open and save your dataset when possible.",
+	"discardUnsaved": "There are unsaved generator changes. Continue and discard these changes?",
+	"retryRequest": "Try again"
 }
