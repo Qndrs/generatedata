@@ -1,5 +1,5 @@
 import type { MutationResolvers } from './../../../types.generated';
-import { db } from '../../../../database';
+import { db, sequelize } from '../../../../database';
 import * as authUtils from '../../../../utils/authUtils';
 
 export const deleteDataSet: NonNullable<MutationResolvers['deleteDataSet']> = async (_parent, { dataSetId }, { token, user }) => {
@@ -14,8 +14,10 @@ export const deleteDataSet: NonNullable<MutationResolvers['deleteDataSet']> = as
     };
   }
 
-  db.dataSets.destroy({ where: { dataSetId } });
-  db.dataSetHistory.destroy({ where: { dataSetId } });
+  await sequelize.transaction(async (transaction) => {
+    await db.dataSetHistory.destroy({ where: { dataSetId }, transaction });
+    await db.dataSets.destroy({ where: { dataSetId }, transaction });
+  });
 
   return {
     success: true

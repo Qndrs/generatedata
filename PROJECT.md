@@ -38,7 +38,7 @@ Zelfstandige applicatieontwikkeling, lokale configuratie, tests en voorbereiding
 
 ## Eerstvolgende stap
 
-De pull request op Qndrs/generatedata beoordelen na geslaagde GitHub-CI. Geen automatische merge, overname van actieve instanties of productiehandeling.
+Robert beoordeelt de technische review en de herstelde beveiligings-/opslagpaden in pull request #1 na geslaagde GitHub-CI. Geen automatische merge, overname van actieve instanties of productiehandeling.
 
 ## Centrale context
 
@@ -82,3 +82,9 @@ WORKING-AGREEMENTS.md, standards/DOCUMENTATION.md en standards/SHARED_GIT_COLLAB
 - Robert heeft publicatie via een ontwikkelbranch en pull request en verificatie van GitHub-CI expliciet geaccordeerd. Branch: codex/project-bootstrap; doelbranch: master van Qndrs/generatedata.
 - Publicatiemanifest vóór de commit opnieuw gecontroleerd; alleen de bedoelde bron, configuratieprofielen, tests en documentatie worden opgenomen. Privécredentials en lokale uitvoer blijven uitgesloten; commitidentiteit gebruikt GitHub-noreply.
 - Actuele review en CI-status: https://github.com/Qndrs/generatedata/pull/1 en https://github.com/Qndrs/generatedata/actions/workflows/quality.yml. Geen merge, deployment of productieverbinding onderdeel van deze publicatiestap.
+
+## Technische PR-review
+
+- Gerichte review uitgevoerd na Roberts akkoord. Historie-invoer gevalideerd en SQL geparametriseerd; databasewrites afgewacht en datasetverwijdering transactioneel gemaakt; vertraagde opslagantwoorden aan hun oorspronkelijke datasetcontext gebonden. Vervaldatumvergelijking en best-effort loginregistratie eveneens gecorrigeerd.
+- Lokaal slagen 124 clienttests en twintig servertests; de eigen API-/SQL-proef slaagt en is opgeruimd. Nieuwe regressies worden standaard door CI uitgevoerd. Bewijs, scope en resterende grenzen: docs/PR-REVIEW.md.
+- Correcties blijven onderdeel van pull request #1; actuele GitHub-CI staat daar. Menselijke review en expliciete beslissing over samenvoegen blijven nodig. Geen productie of actieve lokale instantie gewijzigd.

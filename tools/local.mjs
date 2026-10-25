@@ -60,7 +60,7 @@ else {
       const base=['compose','--env-file',envFile,'-f',path.join(root,'compose.yaml'),'exec','-T','server'];
       docker([...base,'node','/app/tools/generatedata-provision-local-user.cjs'],input);
       docker([...base,'node','/app/tools/generatedata-login-storage-test.cjs'],input);
-      docker([...base,'node','--test','/app/apps/server/tests/auth-security.test.cjs']);
+      docker([...base,'node','--test','/app/apps/server/tests/auth-security.test.cjs','/app/apps/server/tests/review-regressions.test.cjs']);
       break;
     }
     default: throw Error('Commands: quality, setup, build [--no-cache], up, stop, down, status, test, backup, restore, snapshot');

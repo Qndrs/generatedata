@@ -33,13 +33,27 @@ async function login(email,password){return (await gql(loginQuery,{email,passwor
  console.log('PASS: dataset creation, update and exact readback');
  const history=(await gql('query($id:ID!){dataSetHistory(dataSetId:$id,limit:10,offset:0){totalCount results{content}}}',{id:created.dataSetId},session.token)).dataSetHistory;
  assert.equal(history.totalCount,2); assert.equal(history.results.length,2);
- console.log('PASS: saved dataset version history');
+ const historyQuery='query($id:ID!){dataSetHistory(dataSetId:$id,limit:10,offset:0){totalCount results{content}}}';
+ for(const id of [String(created.dataSetId)+' OR 1=1',String(created.dataSetId)+'; SELECT 1']){
+  const denied=(await gql(historyQuery,{id},session.token)).dataSetHistory;
+  assert.equal(denied.totalCount,0);assert.deepEqual(denied.results,[]);
+ }
+ const inaccessible=(await gql(historyQuery,{id:created.dataSetId},other.token)).dataSetHistory;
+ assert.equal(inaccessible.totalCount,0);assert.deepEqual(inaccessible.results,[]);
+ console.log('PASS: saved dataset history, malformed ID rejection and cross-account history isolation');
  const refreshed=(await gql('mutation{refreshToken{success token refreshToken}}',{},'',session.refreshToken)).refreshToken;
  assert.equal(refreshed.success,true); assert.ok(refreshed.token);
  const loaded=(await gql(listing,{},refreshed.token)).dataSets.results.find(x=>x.dataSetId===created.dataSetId);
  assert.equal(loaded.content,nextContent);
  assert.equal((await gql('mutation{refreshToken{success}}',{},'',session.refreshToken)).refreshToken.success,false);
  console.log('PASS: session refresh/rotation and dataset readback after refresh');
+ const remove='mutation($id:ID!){deleteDataSet(dataSetId:$id){success}}';
+ assert.equal((await gql(remove,{id:created.dataSetId},other.token)).deleteDataSet.success,false);
+ assert.equal((await gql(remove,{id:created.dataSetId},refreshed.token)).deleteDataSet.success,true);
+ assert.equal((await gql(listing,{},refreshed.token)).dataSets.results.some(x=>x.dataSetId===created.dataSetId),false);
+ const deletedHistory=(await gql(historyQuery,{id:created.dataSetId},refreshed.token)).dataSetHistory;
+ assert.equal(deletedHistory.totalCount,0);assert.deepEqual(deletedHistory.results,[]);
+ console.log('PASS: authorized dataset deletion and history removal complete before success; other-user deletion denied');
  assert.equal((await gql('mutation{logout{success}}',{},'',refreshed.refreshToken)).logout.success,true);
  assert.equal((await gql('mutation{refreshToken{success}}',{},'',refreshed.refreshToken)).refreshToken.success,false);
  console.log('PASS: logout revokes refresh session');

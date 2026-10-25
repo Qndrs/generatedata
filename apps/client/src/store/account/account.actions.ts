@@ -195,7 +195,9 @@ export const saveNewDataSet =
   (dataSetName: string): any =>
     async (dispatch: Dispatch, getState: any): Promise<any> => {
       const i18n = getStrings();
-      const data: any = getDataSetSavePackage(getState());
+      const state = getState();
+      const context = state.generator?.currentDataSet;
+      const data: any = getDataSetSavePackage(state);
 
       const response = await accountMutation({
         mutation: SAVE_NEW_DATA_SET,
@@ -205,7 +207,7 @@ export const saveNewDataSet =
         }
       });
 
-      if (response.data?.saveNewDataSet?.success) {
+      if (response.data?.saveNewDataSet?.success && getState().generator?.currentDataSet === context) {
         dispatch({
           type: SET_CURRENT_DATA_SET,
           payload: {
@@ -238,6 +240,7 @@ export const saveCurrentDataSet =
 
       const successMessage = successMsg || i18n.core.dataSetSaved;
       const state = getState();
+      const context = state.generator?.currentDataSet;
       const data: any = getDataSetSavePackage(state);
       const dataSetId = getCurrentDataSetId(state);
 
@@ -249,7 +252,7 @@ export const saveCurrentDataSet =
         }
       });
 
-      if (response?.data?.saveDataSet?.success) {
+      if (response?.data?.saveDataSet?.success && getState().generator?.currentDataSet === context) {
         dispatch(updateCurrentDataSetLastSaved(response.data.saveDataSet.savedDate, JSON.stringify(data)));
         enqueueSnackbar(successMessage, { variant: 'success' });
       }
@@ -259,7 +262,9 @@ export const UPDATE_CURRENT_DATA_SET_NAME = 'UPDATE_CURRENT_DATA_SET_NAME';
 export const renameDataSet =
   (dataSetName: string): any =>
     async (dispatch: Dispatch, getState: any): Promise<any> => {
-      const dataSetId = getCurrentDataSetId(getState());
+      const state = getState();
+      const context = state.generator?.currentDataSet;
+      const dataSetId = getCurrentDataSetId(state);
 
       const { data } = await accountMutation({
         mutation: RENAME_DATA_SET,
@@ -269,7 +274,7 @@ export const renameDataSet =
         }
       });
 
-      if (data?.renameDataSet?.success) {
+      if (data?.renameDataSet?.success && getState().generator?.currentDataSet === context) {
         dispatch({
           type: UPDATE_CURRENT_DATA_SET_NAME,
           payload: {

@@ -20,7 +20,7 @@ De opdracht faalt met een niet-nul exitcode bij een mislukte controle. Bestaande
 | Clientregressie | Volledige Jest-suite van apps/client | Store, layout, onderdelen, opslagfouten en sessies |
 | Generatie en exports | tools/tests/generation-exports.test.cjs | Werkelijk gebouwde Names-, JSON-, CSV- en SQL-workers via hun berichteninterface |
 | Login, opslag en historie | tools/generatedata-login-storage-test.cjs | Echte login, bewaren/bijwerken/teruglezen, versiehistorie, eigendomsisolatie, sessies en geblokkeerde accounts via nginx |
-| API-authenticatie | apps/server/tests/auth-security.test.cjs | JWT-controles en toegang tot beschermde resolvers |
+| API-authenticatie | apps/server/tests/auth-security.test.cjs en review-regressions.test.cjs | JWT-controles, beschermde resolvers, veilig gebonden historiequeries en correct afwachten van databasewrites |
 | MySQL-export | tools/generatedata-sql-export-test.cjs | Gebouwde SQL-uitvoer uitvoeren op MariaDB en de exacte Unicode-, tekst- en getalwaarden teruglezen |
 | Beheerderflow | tools/generatedata-account-flow-test.cjs | Account aanmaken, tijdelijk wachtwoord en overstap naar eigen wachtwoord; geen zelfregistratie |
 | Isolatie van testroute | tools/tests/quality-runner.test.cjs | Actieve projectnaam, afwijkende configuratie en onbekende opties weigeren |
