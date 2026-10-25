@@ -65,16 +65,16 @@ describe('generator section', () => {
     expect(selectors.isGridVisible(store.getState())).toEqual(true);
   });
 
-  it('layout is vertical by default', () => {
-    expect(selectors.getGeneratorLayout(store.getState())).toEqual('vertical');
+  it('layout is horizontal by default', () => {
+    expect(selectors.getGeneratorLayout(store.getState())).toEqual('horizontal');
   });
 
-  it('toggling the layout', () => {
-    store.dispatch(actions.toggleLayout());
-    expect(selectors.getGeneratorLayout(store.getState())).toEqual('horizontal');
-
+  it('toggling the layout switches to vertical and back to horizontal', () => {
     store.dispatch(actions.toggleLayout());
     expect(selectors.getGeneratorLayout(store.getState())).toEqual('vertical');
+
+    store.dispatch(actions.toggleLayout());
+    expect(selectors.getGeneratorLayout(store.getState())).toEqual('horizontal');
   });
 
   it('sets the default number of rows to 5', () => {
@@ -233,4 +233,11 @@ describe('misc selectors', () => {
     // 	expect(selectors.getRowDataTypes(store.getState())).toEqual([]);
     // });
   });
+});
+
+test('clearing a saved generator resets its saved checkpoint',()=>{
+ const store=createStore(generatorReducer);
+ store.dispatch({type:'SET_CURRENT_DATA_SET',payload:{dataSetId:7,dataSetName:'Saved',savedSnapshot:'old snapshot'}});
+ store.dispatch({type:actions.RESET_GENERATOR,payload:{exportTypeInitialStates:{}}});
+ expect(store.getState().savedSnapshot).toBeUndefined();
 });

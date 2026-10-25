@@ -1,3 +1,4 @@
+import clientConfig from '@generatedata/config/clientConfig';
 import { Dialog, DialogActions, DialogContent, DialogLoadingSpinner, DialogTitle, PrimaryButton, TextField } from '@generatedata/shared';
 import { getVendorLoginButtons, hasVendorLogin } from '../../../utils/authUtils';
 import { isValidEmail } from '@generatedata/utils/general';
@@ -85,7 +86,7 @@ const LoginDialog = ({
 
     if (!eError && !pError) {
       onSubmit(email, password, navigate, (error: string) => {
-        let errorMessage = i18n.userNotFound;
+        let errorMessage = error === 'networkError' ? i18n.connectionUnavailable : i18n.userNotFound;
         if (error === 'accountExpired') {
           errorMessage = i18n.accountExpiredMsg;
         }
@@ -214,7 +215,13 @@ const LoginDialog = ({
               </div>
             </DialogContent>
             <DialogActions className={classNames.actionsRow}>
-              <div className={classNames.forgotPasswordLink} onClick={(): void => showPasswordResetDialog(email)}>
+              <div className={classNames.forgotPasswordLink} onClick={(): void => {
+                if (clientConfig.auth.GD_PASSWORD_RESET_ENABLED === false) {
+                  enqueueSnackbar(i18n.contactAdministrator, { variant: 'info' });
+                } else {
+                  showPasswordResetDialog(email);
+                }
+              }}>
                 {i18n.forgottenYourPasswordQ}
               </div>
               <PrimaryButton type="submit" disabled={dialogProcessing}>

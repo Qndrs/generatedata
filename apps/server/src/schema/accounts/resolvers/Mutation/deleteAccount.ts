@@ -15,7 +15,7 @@ export const deleteAccount: NonNullable<MutationResolvers['deleteAccount']> = as
     };
   }
 
-  db.accounts.destroy({ where: { accountId } });
+  await db.accounts.destroy({ where: { accountId } });
 
   return {
     success: true

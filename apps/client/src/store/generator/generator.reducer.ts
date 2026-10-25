@@ -123,6 +123,7 @@ export type UpdatePanelSizeData = {
 };
 
 export type GeneratorState = {
+  savedSnapshot?: string;
   loadedDataTypes: Partial<Record<DataTypeFolder, boolean>>;
   loadedExportTypes: Partial<Record<ExportTypeFolder, boolean>>;
 
@@ -208,6 +209,7 @@ export const getInitialState = (): GeneratorState => ({
   },
   isCountryNamesLoading: false,
   isCountryNamesLoaded: false,
+  savedSnapshot: undefined,
   stashedState: null
 });
 
@@ -241,6 +243,7 @@ export const reducer = produce((draft: GeneratorState, action: AnyAction) => {
       break;
 
     case actions.CLEAR_GRID:
+      draft.savedSnapshot = undefined;
       draft.rows = {};
       draft.sortedRows = [];
       draft.dataTypePreviewData = {};
@@ -253,6 +256,7 @@ export const reducer = produce((draft: GeneratorState, action: AnyAction) => {
       break;
 
     case actions.RESET_GENERATOR: {
+      draft.savedSnapshot = undefined;
       draft.rows = {};
       draft.sortedRows = [];
       draft.showClearPageDialog = false;
@@ -462,6 +466,7 @@ export const reducer = produce((draft: GeneratorState, action: AnyAction) => {
       break;
 
     case accountActions.SET_CURRENT_DATA_SET:
+      draft.savedSnapshot = action.payload.savedSnapshot;
       draft.currentDataSet = {
         dataSetId: action.payload.dataSetId,
         dataSetName: action.payload.dataSetName,
@@ -471,6 +476,7 @@ export const reducer = produce((draft: GeneratorState, action: AnyAction) => {
 
     case accountActions.UPDATE_CURRENT_DATA_SET_LAST_SAVED:
       draft.currentDataSet.lastSaved = action.payload.lastSaved;
+      draft.savedSnapshot = action.payload.savedSnapshot;
       break;
 
     case actions.LOAD_DATA_SET: {
@@ -479,6 +485,7 @@ export const reducer = produce((draft: GeneratorState, action: AnyAction) => {
       draft.exportTypeSettings[exportType as ExportTypeFolder] = exportTypeSettings;
       draft.rows = rows;
       draft.sortedRows = sortedRows;
+      draft.savedSnapshot = JSON.stringify({ exportType, exportTypeSettings, rows, sortedRows });
       draft.currentDataSet = {
         dataSetId,
         dataSetName,

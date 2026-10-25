@@ -1,0 +1,45 @@
+name: generatedata-local-trial
+services:
+  db:
+    image: mariadb:10.5.8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?local secret required}
+      MYSQL_DATABASE: generatedata
+    volumes:
+      - trial-db:/var/lib/mysql
+      - ./trial-init.sql:/docker-entrypoint-initdb.d/setup.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_ROOT_PASSWORD" mysql -h 127.0.0.1 -u root -Nse "SELECT COUNT(*) FROM generatedata.accounts" >/dev/null']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  server:
+    image: generatedata-local-trial-api:local-fixes2
+    build:
+      context: .
+      dockerfile: ../tools/Dockerfile.generatedata-local-fixes
+      target: api
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?local secret required}
+      GD_JWT_SECRET: ${GD_JWT_SECRET:?local secret required}
+      GD_JWT_REFRESH_TOKEN_SECRET: ${GD_JWT_REFRESH_TOKEN_SECRET:?local secret required}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3001/graphql',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:'{__typename}'})}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    image: generatedata-local-trial-web:local-fixes
+    build:
+      context: .
+      dockerfile: ../tools/Dockerfile.generatedata-local-fixes
+      target: web
+    ports:
+      - 127.0.0.1:19090:9000
+    depends_on:
+      - server
+volumes:
+  trial-db:

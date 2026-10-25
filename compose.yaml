@@ -1,0 +1,58 @@
+services:
+  db:
+    image: ${DG_DB_IMAGE:-mariadb:11.4.13@sha256:250e1609e93c0e6aecf64bfbab2d84d5e89d2481540fe77447ff6c855c3b1873}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Run setup first}
+      MYSQL_DATABASE: generatedata
+      MYSQL_USER: gdapp
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Run setup first}
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_PASSWORD" mariadb -h 127.0.0.1 -u gdapp generatedata -Nse "SELECT 1" >/dev/null']
+      interval: 3s
+      timeout: 5s
+      retries: 60
+  init:
+    image: ${COMPOSE_PROJECT_NAME:?}-api:local
+    build:
+      context: .
+      target: api
+    command: [node, tools/init-database.cjs]
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
+      DG_ADMIN_EMAIL: beheerder@example.invalid
+      DG_ADMIN_PASSWORD: ${DG_ADMIN_PASSWORD:?}
+    depends_on:
+      db:
+        condition: service_healthy
+  server:
+    image: ${COMPOSE_PROJECT_NAME:?}-api:local
+    build:
+      context: .
+      target: api
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
+      GD_JWT_SECRET: ${GD_JWT_SECRET:?}
+      GD_JWT_REFRESH_TOKEN_SECRET: ${GD_JWT_REFRESH_TOKEN_SECRET:?}
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3001/graphql',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:'{__typename}'})}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+  web:
+    image: ${COMPOSE_PROJECT_NAME:?}-web:local
+    build:
+      context: .
+      target: web
+    ports:
+      - ${DG_BIND_HOST:-127.0.0.1}:${DG_PORT:?}:9000
+    depends_on:
+      server:
+        condition: service_healthy
+volumes:
+  database:
+    name: ${DG_DB_VOLUME:-${COMPOSE_PROJECT_NAME}_database114}

@@ -18,6 +18,7 @@ export type GDClientConfig = {
   auth: {
     GD_JWT_LIFESPAN_MINS: number;
     GD_GOOGLE_AUTH_CLIENT_ID: string;
+    GD_PASSWORD_RESET_ENABLED?: boolean;
   };
   appSettings: {
     GD_APP_TYPE: AppType;

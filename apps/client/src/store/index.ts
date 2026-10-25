@@ -1,3 +1,4 @@
+import { hasUnsavedChanges } from './unsavedChanges';
 /* istanbul ignore file */
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import C from '@generatedata/config/constants';
@@ -7,9 +8,10 @@ import generatorReducer from './generator/generator.reducer'; // , { GeneratorSt
 import mainReducer from './main/main.reducer';
 import packetsReducer from './packets/packets.reducer';
 import { persistStore } from './persistor';
+import { readDraft, discardDraft, isDraftUnavailable } from './draftStorage';
 
 function initStore(): any {
-  const preloadedDataStr = localStorage.getItem('generatedata');
+  const preloadedDataStr = readDraft();
   let preloadedState;
 
   try {
@@ -19,7 +21,7 @@ function initStore(): any {
   }
 
   if (preloadedState?.main?.appStateVersion !== C.APP_STATE_VERSION) {
-    localStorage.removeItem('generatedata');
+    discardDraft();
     preloadedState = undefined;
   }
 
@@ -54,6 +56,12 @@ if (process.env.NODE_ENV !== 'test') {
   // custom serialization layer. This is a real shame - redux-persist was good. But the project is abandoned, and I didn't
   // like the current available alternatives.
   store.subscribe(() => persistStore(store));
+  window.addEventListener('beforeunload', event => {
+    if (isDraftUnavailable() || hasUnsavedChanges(store.getState())) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  });
 }
 
 export default store;

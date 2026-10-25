@@ -14,11 +14,19 @@ export const dataSetHistory: NonNullable<QueryResolvers['dataSetHistory']> = asy
     };
   }
 
+  const validatedId = Number(dataSetId);
+  const pageSize = limit ?? 20;
+  const pageOffset = offset ?? 0;
+  if (!/^[1-9]\d*$/.test(String(dataSetId)) || !Number.isSafeInteger(validatedId) ||
+      !Number.isInteger(pageSize) || pageSize < 0 || !Number.isInteger(pageOffset) || pageOffset < 0) {
+    return { results: [], totalCount: 0 };
+  }
+
   // confirm dataSetId belongs to current user
   const exists = await db.dataSets.findOne({
     where: {
       accountId: user.accountId,
-      dataSetId
+      dataSetId: validatedId
     }
   });
 
@@ -32,11 +40,11 @@ export const dataSetHistory: NonNullable<QueryResolvers['dataSetHistory']> = asy
   const [results] = (await sequelize.query(`
     SELECT *
     FROM dataset_history dh
-    WHERE dataset_id = ${dataSetId}
+    WHERE dataset_id = :dataSetId
     ORDER BY history_id DESC
-    LIMIT ${limit}
-    OFFSET ${offset}
-  `)) as Array<any>;
+    LIMIT :limit
+    OFFSET :offset
+  `, { replacements: { dataSetId: validatedId, limit: pageSize, offset: pageOffset } })) as Array<any>;
 
   const [totalCountQuery] = (await sequelize.query(
     `
@@ -44,11 +52,11 @@ export const dataSetHistory: NonNullable<QueryResolvers['dataSetHistory']> = asy
       FROM dataset_history
       WHERE dataset_id = ${dataSetId} 
     `,
-    { raw: true, type: QueryTypes.SELECT }
+    { raw: true, type: QueryTypes.SELECT, replacements: { dataSetId: validatedId } }
   )) as any[];
 
   return {
-    totalCount: (totalCountQuery[0] as any).c,
+    totalCount: Number(totalCountQuery.c),
     results: results.map((row: any) => ({
       dataSetId: row.dataset_id,
       historyId: row.history_id,

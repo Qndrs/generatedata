@@ -32,7 +32,7 @@ export const updatePassword: NonNullable<MutationResolvers['updatePassword']> = 
 
   const newPasswordHash = await authUtils.getPasswordHash(newPassword);
 
-  userRecord.update({
+  await userRecord.update({
     password: newPasswordHash,
     oneTimePassword: ''
   });

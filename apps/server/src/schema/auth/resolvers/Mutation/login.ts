@@ -9,6 +9,7 @@ export const login: NonNullable<MutationResolvers['login']> = async (_parent, { 
     attributes: [
       'accountId',
       'accountType',
+      'accountStatus',
       'password',
       'oneTimePassword',
       'firstName',
@@ -23,7 +24,7 @@ export const login: NonNullable<MutationResolvers['login']> = async (_parent, { 
     }
   });
 
-  if (!user) {
+  if (!user || user.dataValues.accountStatus !== 'live') {
     return { success: false };
   }
 
@@ -59,10 +60,10 @@ export const login: NonNullable<MutationResolvers['login']> = async (_parent, { 
   const { token, tokenExpiry, refreshToken } = await getNewTokens(accountId, email, user);
   const numRowsGenerated = await getAccountNumRowsGenerated(accountId);
 
-  // we ignore async-ness here. No point slowing down the login just to track the last logged in date
-  user.update({
+  // This metric is best-effort; a logging failure must not become an unhandled rejection.
+  void user.update({
     lastLoggedIn: new Date().getTime() / 1000
-  });
+  }).catch(() => {});
 
   return {
     success: true,

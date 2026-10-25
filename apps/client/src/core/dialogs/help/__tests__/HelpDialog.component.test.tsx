@@ -1,3 +1,4 @@
+import { setLocale } from '@generatedata/utils/lang';
 import { DataTypeFolder } from '@generatedata/plugins';
 import { fireEvent, render } from '@testing-library/react';
 import sinon from 'sinon';
@@ -12,7 +13,7 @@ const defaultProps = {
   initialDataType: 'Names' as DataTypeFolder,
   visible: true,
   onClose: () => {},
-  coreI18n: i18n,
+  coreI18n: i18n.core,
   dataTypeI18n: {
     Names: NamesI18n
   },
@@ -21,6 +22,8 @@ const defaultProps = {
 };
 
 describe('HelpDialog', () => {
+  beforeEach(() => setLocale('en', i18n));
+  afterEach(() => sinon.restore());
   it('clicking close calls the onClose callback', () => {
     sinon.stub(dataTypeUtils, 'getSortedGroupedDataTypes').returns([
       {

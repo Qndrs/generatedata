@@ -1,5 +1,7 @@
+import { hasUnsavedChanges } from '../unsavedChanges';
 import { gql } from '@apollo/client';
 import C from '@generatedata/config/constants';
+import clientConfig from '@generatedata/config/clientConfig';
 import type { AuthResponse } from '@generatedata/server';
 import { setTourComponents } from '@generatedata/utils/general';
 import { getCurrentLocalizedPath, getStrings, setLocale } from '@generatedata/utils/lang';
@@ -14,7 +16,7 @@ import { CLEAR_GRID } from '~store/generator/generator.actions';
 import { getCurrentPage, getLocale } from '~store/main/main.selectors';
 import { AccountStatusFilter, AuthMethod, GDAction, GDLocale } from '~types/general';
 import { getGeneratorPageRoute, isGeneratorPage } from '~utils/routeUtils';
-import { setAuthTokenRefresh } from '~utils/authUtils';
+import { clearAuthTokenRefresh, setAuthTokenRefresh } from '~utils/authUtils';
 import { localeFileMap } from '@generatedata/i18n';
 import { apolloClient } from '../../core/apolloClient';
 import { enqueueSnackbar } from 'notistack';
@@ -134,34 +136,40 @@ export const login = (email: string, password: string, navigate: any, onLoginErr
   return async (dispatch: Dispatch): Promise<any> => {
     dispatch(startDialogProcessing());
 
-    const { data } = await apolloClient.mutate({
-      mutation: LOGIN_MUTATION,
-      variables: { email, password }
-    });
-
-    if (data?.login?.success) {
-      const { tokenExpiry: tokenExpiryStr, refreshToken } = data.login;
-      const tokenExpiry = parseInt(tokenExpiryStr!, 10);
-
-      dispatch(
-        setAuthenticationData({
-          ...data.login,
-          authMethod: 'default'
-        })
-      );
-
-      Cookies.set('refreshToken', refreshToken!, {
-        expires: new Date(tokenExpiry!)
+    try {
+      const { data } = await apolloClient.mutate({
+        mutation: LOGIN_MUTATION,
+        variables: { email, password }
       });
 
-      if (data.login.wasOneTimeLogin) {
-        onOneTimeLoginSuccess(tokenExpiry!, password, navigate, dispatch);
+      if (data?.login?.success) {
+        const { tokenExpiry: tokenExpiryStr, refreshToken } = data.login;
+        const tokenExpiry = parseInt(tokenExpiryStr!, 10);
+
+        dispatch(
+          setAuthenticationData({
+            ...data.login,
+            authMethod: 'default'
+          })
+        );
+
+        Cookies.set('refreshToken', refreshToken!, {
+          expires: new Date(tokenExpiry!)
+        });
+
+        if (data.login.wasOneTimeLogin) {
+          onOneTimeLoginSuccess(tokenExpiry!, password, navigate, dispatch);
+        } else {
+          onLoginSuccess(tokenExpiry!, false, dispatch);
+        }
       } else {
-        onLoginSuccess(tokenExpiry!, false, dispatch);
+        dispatch(setLoginError());
+        onLoginError(data?.login?.error);
       }
-    } else {
-      dispatch(setLoginError());
-      onLoginError(data?.login?.error);
+    } catch {
+      onLoginError('networkError');
+    } finally {
+      dispatch(stopDialogProcessing());
     }
   };
 };
@@ -206,27 +214,33 @@ export const onOneTimeLoginSuccess = (tokenExpiry: number, password: string, nav
 export const LOGOUT = 'LOGOUT';
 export const logout =
   (): any =>
-    async (dispatch: Dispatch): Promise<any> => {
+    async (dispatch: Dispatch, getState: any): Promise<any> => {
       const i18n = getStrings();
 
-      Cookies.remove('refreshToken');
+      if (hasUnsavedChanges(getState()) && !window.confirm(i18n.core.discardUnsaved)) return;
 
-      dispatch({ type: LOGOUT });
-      dispatch({ type: CLEAR_GRID });
-      dispatch(actions.addRows(C.NUM_DEFAULT_ROWS));
-
-      enqueueSnackbar(i18n.core.nowLoggedOut, { variant: 'success' });
-
-      // doesn't awfully matter if this fails. It's just for cleanup
-      await apolloClient.mutate({
-        mutation: gql`
+      clearAuthTokenRefresh();
+      // Revoke the refresh token while its cookie is still present.
+      try {
+        await apolloClient.mutate({
+          mutation: gql`
         mutation Logout {
           logout {
             success
           }
         }
       `
-      });
+        });
+      } catch {
+        enqueueSnackbar(i18n.core.logoutUnconfirmed, { variant: 'warning' });
+      } finally {
+        Cookies.remove('refreshToken');
+        dispatch({ type: LOGOUT });
+        dispatch({ type: CLEAR_GRID });
+        dispatch(actions.addRows(C.NUM_DEFAULT_ROWS));
+        await apolloClient.clearStore();
+        enqueueSnackbar(i18n.core.nowLoggedOut, { variant: 'success' });
+      }
     };
 
 export const SET_AUTH_TOKEN = 'SET_AUTH_TOKEN';
@@ -240,28 +254,35 @@ export const updateRefreshToken =
   () =>
     async (dispatch: Dispatch): Promise<any> => {
       dispatch({ type: REFRESHING_TOKEN });
-
-      const { data } = await apolloClient.mutate({
-        mutation: REFRESH_TOKEN
-      });
-
-      if (data?.refreshToken?.success) {
-        const { token, tokenExpiry: tokenExpiryStr, refreshToken } = data.refreshToken;
-        const tokenExpiry = parseInt(tokenExpiryStr!, 10);
-
-        Cookies.set('refreshToken', refreshToken!, {
-          expires: new Date(tokenExpiry!)
-        });
-
-        setAuthTokenRefresh(tokenExpiry!, (): any => updateRefreshToken()(dispatch));
-        dispatch(setAuthenticationData(data.refreshToken));
-        dispatch(setAuthToken(token!));
-      } else {
-      // console.log('token NOT refreshed -- user logged out');
+      try {
+        const { data } = await apolloClient.mutate({ mutation: REFRESH_TOKEN });
+        if (data?.refreshToken?.success) {
+          const { token, tokenExpiry: tokenExpiryStr, refreshToken } = data.refreshToken;
+          const tokenExpiry = parseInt(tokenExpiryStr!, 10);
+          Cookies.set('refreshToken', refreshToken!, { expires: new Date(tokenExpiry) });
+          setAuthTokenRefresh(tokenExpiry, (): any => updateRefreshToken()(dispatch));
+          dispatch(setAuthenticationData(data.refreshToken));
+          dispatch(setAuthToken(token!));
+        } else {
+          clearAuthTokenRefresh();
+          dispatch({ type: LOGOUT });
+          await apolloClient.clearStore();
+          dispatch({ type: 'SET_CURRENT_DATA_SET', payload: { dataSetId: null, dataSetName: '' } });
+          Cookies.remove('refreshToken');
+          enqueueSnackbar(getStrings().core.sessionEnded, { variant: 'warning', preventDuplicate: true });
+        }
+        dispatch(setAuthenticated(!!data?.refreshToken?.success));
+      } catch {
+        // Preserve the refresh cookie for a deliberate retry when connectivity returns.
+        clearAuthTokenRefresh();
+        dispatch({ type: LOGOUT });
+        await apolloClient.clearStore();
+        dispatch({ type: 'SET_CURRENT_DATA_SET', payload: { dataSetId: null, dataSetName: '' } });
+        dispatch(setAuthenticated(false));
+        enqueueSnackbar(getStrings().core.connectionUnavailable, { variant: 'warning', preventDuplicate: true });
+      } finally {
+        dispatch(setOnloadAuthDetermined());
       }
-
-      dispatch(setAuthenticated(!!data?.refreshToken?.success));
-      dispatch(setOnloadAuthDetermined());
     };
 
 export const ONLOAD_AUTH_DETERMINED = 'ONLOAD_AUTH_DETERMINED';
@@ -320,19 +341,30 @@ export const sendPasswordResetEmail =
 
       dispatch(startDialogProcessing());
 
-      const { data } = await apolloClient.mutate({
-        mutation: SEND_PASSWORD_RESET_EMAIL_MUTATION,
-        variables: { email }
-      });
-
-      if (data?.sendPasswordResetEmail?.success) {
-        enqueueSnackbar(i18n.core.passwordResetMsg, { variant: 'success' });
-        dispatch(setPasswordResetDialogVisibility(false));
-        dispatch(setLoginDialogVisibility(true, email));
+      if (clientConfig.auth.GD_PASSWORD_RESET_ENABLED === false) {
+        enqueueSnackbar(i18n.core.contactAdministrator, { variant: 'info' });
         dispatch(stopDialogProcessing());
-      } else {
-        dispatch(setLoginError());
-        onLoginError();
+        return;
+      }
+      try {
+        const { data } = await apolloClient.mutate({
+          mutation: SEND_PASSWORD_RESET_EMAIL_MUTATION,
+          variables: { email }
+        });
+
+        if (data?.sendPasswordResetEmail?.success) {
+          enqueueSnackbar(i18n.core.passwordResetMsg, { variant: 'success' });
+          dispatch(setPasswordResetDialogVisibility(false));
+          dispatch(setLoginDialogVisibility(true, email));
+          dispatch(stopDialogProcessing());
+        } else {
+          dispatch(setLoginError());
+          onLoginError();
+        }
+      } catch {
+        enqueueSnackbar(i18n.core.connectionUnavailable, { variant: 'error' });
+      } finally {
+        dispatch(stopDialogProcessing());
       }
     };
 

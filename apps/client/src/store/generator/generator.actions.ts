@@ -1,3 +1,4 @@
+import { hasUnsavedChanges } from '../unsavedChanges';
 import C from '@generatedata/config/constants';
 import { DataTypeFolder, DTBundle, DTOptionsMetadata, ExportTypeFolder, getCountryData } from '@generatedata/plugins';
 import { DataSetListItem } from '../../../types/dataSets';
@@ -451,6 +452,7 @@ export const loadDataSet =
   (dataSet: DataSetListItem, showToast = true): any =>
     async (dispatch: Dispatch, getState: any): Promise<any> => {
       const i18n = getStrings();
+      if (hasUnsavedChanges(getState()) && !window.confirm(i18n.core.discardUnsaved)) return;
       const { exportType, exportTypeSettings, rows, sortedRows } = JSON.parse(dataSet.content);
 
       const dataTypes = sortedRows.map((hash: string) => rows[hash].dataType).filter((dataType: DataTypeFolder | null) => dataType !== null);

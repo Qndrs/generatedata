@@ -11,9 +11,14 @@ export const generate = (data: ETMessageData): string => {
   };
   const eol = map[lineEndings];
 
+  const encode = (value: unknown): string => {
+    const text = String(value ?? '');
+    return text.includes(delimiter) || /["\r\n]/.test(text) ? '"' + text.replaceAll('"', '""') + '"' : text;
+  };
+
   let content = '';
   if (isFirstBatch) {
-    const titleRow = columns.map(({ title }) => title).join(delimiter);
+    const titleRow = columns.map(({ title }) => encode(title)).join(delimiter);
     content += `${titleRow}${eol}`;
   }
 
@@ -21,12 +26,7 @@ export const generate = (data: ETMessageData): string => {
   rows.forEach((row) => {
     const cleanRow = [];
     for (let i = 0; i < numCols; i++) {
-      // see if any of the cells contains the delimiter. If it does, wrap the cell in double quotes
-      if (row[i] && row[i].toString().indexOf(delimiter) !== -1) {
-        cleanRow.push(`"${row[i]}"`);
-      } else {
-        cleanRow.push(row[i]);
-      }
+      cleanRow.push(encode(row[i]));
     }
     content += cleanRow.join(delimiter) + eol;
   });
