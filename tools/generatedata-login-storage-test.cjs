@@ -58,6 +58,9 @@ async function login(email,password){return (await gql(loginQuery,{email,passwor
  assert.equal((await gql('mutation{refreshToken{success}}',{},'',refreshed.refreshToken)).refreshToken.success,false);
  console.log('PASS: logout revokes refresh session');
  const {db,sequelize}=require('/app/apps/server/dist/database'); sequelize.options.logging=false;
+ assert.equal(await db.dataSets.count({where:{dataSetId:created.dataSetId}}),0);
+ assert.equal(await db.dataSetHistory.count({where:{dataSetId:created.dataSetId}}),0);
+ console.log('PASS: deleted dataset and history are absent from the database');
  const account=await db.accounts.findOne({where:{email:credentials.email}});
  try {
   await account.update({accountStatus:'disabled'});
