@@ -56,5 +56,3 @@ services:
 volumes:
   database:
     name: ${DG_DB_VOLUME:-${COMPOSE_PROJECT_NAME}_database114}
-
-

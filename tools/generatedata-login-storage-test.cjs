@@ -52,5 +52,3 @@ async function login(email,password){return (await gql(loginQuery,{email,passwor
  } finally {await account.update({accountStatus:'live'}); await sequelize.close();}
  console.log('ALL LOCAL LOGIN/STORAGE INTEGRATION CHECKS PASSED');
 })().catch(e=>{console.error(e.message);process.exit(1)});
-
-

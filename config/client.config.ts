@@ -75,4 +75,3 @@ const config: GDClientConfig = {
 };
 
 export default config;
-

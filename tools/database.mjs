@@ -76,5 +76,3 @@ else if(cmd==='backup'){
  for(const name of ['admin.json','test-users.json'])if(manifest.configurationFiles[name]){fs.copyFileSync(path.join(folder,name),path.join(configRoot,name));fs.chmodSync(path.join(configRoot,name),0o600);}
  console.log('PASS: restored accounts (including hashes), datasets, history and settings match backup');console.log(JSON.stringify({version:restored.version,counts:Object.fromEntries(Object.entries(restored.tables).map(([k,v])=>[k,v.count]))}));
 }else throw Error('Commands: backup [external-directory], restore external-directory, snapshot');
-
-
