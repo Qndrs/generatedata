@@ -1,90 +1,48 @@
 # Project: Datagenerator
 
-## Doel, status en stakeholders
+## Doel en status
 
-Status: actief. Realistische synthetische demonstratie- en testgegevens genereren met Nederlandse bediening en eigen uitbreidingen. Robert is opdrachtgever/beheerder; Codex ondersteunt namens Robert.
+Status: actief. Realistische synthetische demonstratie- en testgegevens met Nederlandse bediening en eigen uitbreidingen. Robert is opdrachtgever/beheerder; Codex ondersteunt namens Robert.
 
-Locatie: D:\_qndrs\datagenerator. Stappen 1 tot en met 3 zijn geaccordeerd en uitgevoerd. Stappen 4 en 5 zijn geaccordeerd en afzonderlijk lokaal uitgevoerd. Elke volgende roadmapstap vraagt afzonderlijk akkoord.
+Ontwikkelbron en beheerroute: C:/Projects/datagenerator, buiten STACK. Repository: https://github.com/Qndrs/generatedata. Pull request #1 is samengevoegd naar master; de lokale herstelbranch is codex/stack-recovery. Publicatie van nieuwe wijzigingen vraagt afzonderlijke opdracht.
 
-## Scope
+## Huidige operationele state
 
-Zelfstandige applicatieontwikkeling, lokale configuratie, tests en voorbereiding van GitHub-publicatie. Stap 3 heeft afzonderlijke database- en herstelproeven toegevoegd. De actieve lokale databaseomschakeling is daarna afzonderlijk geaccordeerd en uitgevoerd. Stap 4 heeft daarna de foutafhandeling en gebruikersflow verbeterd in een afzonderlijke lokale instantie. Stap 5 voegde een herhaalbare kwaliteitsroute, exportregressies en een voorbereide CI-workflow toe. Stap 7 is expliciet geaccordeerd: publicatie via de ontwikkelbranch en een pull request op de Qndrs-fork. Geen productieverbinding of nieuwe generatorfuncties; samenvoegen en deployment vallen buiten deze opdracht.
+- De drie lokale instanties op 19090, 19091 en 19094 draaien gecontroleerd vanuit de schone bron. Accounts, passwordhashes, rollen, accountstatus, datasets, historie en instellingen zijn behouden.
+- Iedere instantie heeft een nieuw eigen volume met dezelfde database-engineversie. De hoofdinstantie en gebruikersflowproef gebruiken MariaDB 11.4.13; de oudere proef behoudt 10.5.8. Geen engine-upgrade uitgevoerd.
+- Laatste bevroren back-ups, oorspronkelijke volumes en vastgezette images blijven als terugvalpunten bewaard. JWT-secrets en adressen zijn behouden; alle negen draaiende services zijn gezond.
+- De oude bronmappen op D: blijven bewijs/historische referentie. De D:-synchronisatie in STACK is gepauzeerd. Productie is niet benaderd of gewijzigd.
+- Runtimeconfiguraties en vertrouwelijk bewijs staan buiten Git. Beheer en terugval: [LOCAL-CUTOVER.md](docs/LOCAL-CUTOVER.md).
 
-## Architectuur en besluiten
+## Architectuur en blijvende besluiten
 
-- Basis: Generatedata 5.0.0-beta4, upstreamcommit 3cc52e0f10b4fa523e4369417667dfa94686f94d. Volledige upstreamgeschiedenis en lokale branch codex/project-bootstrap behouden; origin verwijst naar de publieke fork Qndrs/generatedata. De wijzigingen staan op codex/project-bootstrap en worden via pull request #1 tegen master beoordeeld.
-- Node 24, pnpm 10.31.0, TypeScript/React, GraphQL, nginx en MariaDB. apps/client en apps/server, gedeelde onderdelen onder packages.
-- Canonieke lokale route: Dockerfile, compose.yaml en tools/local.mjs. Build gebruikt officiële basisimages en het lockbestand, geen oude applicatie-images.
-- Publieke instellingen onder config/; runtime-secrets en admin.json buiten de repository. Loginmodus en Nederlandse interface. /graphql via dezelfde origin; database/API alleen intern.
-- Standaardinstantie datagenerator-dev op http://127.0.0.1:19091/nl/, met eigen named volume. 127.0.0.1 houdt cookies gescheiden van de oude localhost-proef op 19090, die niet is omgeschakeld.
-- Database-appgebruiker gdapp; API krijgt geen database-rootwachtwoord. Initialisatie gebruikt alleen een lege database; bestaande accounts en wachtwoorden worden behouden.
-- Synthetische e-mailadressen moeten geloofwaardig ogen met bewust ongeldige domeinen; betere voorbeelddata is later werk.
+- Generatedata 5.0.0-beta4, upstreambasis 3cc52e0f10b4fa523e4369417667dfa94686f94d; volledige upstreamgeschiedenis, GPL-licentie en auteursvermeldingen behouden.
+- Node 24, pnpm 10.31.0, TypeScript/React, GraphQL, nginx en MariaDB. Canonieke route: Dockerfile, compose.yaml en tools/local.mjs. /graphql gebruikt dezelfde origin; API/database hebben geen publieke hostpoorten.
+- Publieke instellingen staan onder config/. Runtimegeheimen en datavolumes blijven buiten de repository. De API gebruikt de database-appgebruiker gdapp en krijgt geen database-rootwachtwoord.
+- Accounts blijven beheerdergestuurd; geen zelfregistratie of ingerichte e-mail-/wachtwoordherstelworkflow. Lokale secrets niet regenereren voor te behouden data.
+- Synthetische e-mailadressen moeten geloofwaardig ogen met bewust ongeldige domeinen. Betere voorbeelddata en nieuwe generatorfuncties zijn later werk.
+- Actieve Git-repositories staan buiten bidirectionele bestandssynchronisatie. Origin is de Qndrs-fork; upstream is bronreferentie en tegen pushen afgeschermd.
 
-## Huidige state en verificatie
+## Verificatie
 
-- Elf broncorrecties uit de oorspronkelijke proef behouden, waaronder vertalingen, same-origin API, sessies/accountstatus en datasetgeschiedenis. De overbodige TypeScript-directive is nu in de bron verwijderd.
-- Schone lokale clone met expliciete overlay van de huidige ongecommitteerde projectbestanden gebouwd met --no-cache. Geen node_modules, echte configuraties, oude database of vooraf gemaakt applicatie-image overgenomen.
-- Build/lint geslaagd. Geautomatiseerde login-/dataset-/historie-/sessie-/isolatietests en zes upstream-authenticatietests geslaagd op de nieuwe instantie.
-- Setup tweemaal uitgevoerd met identieke runtimeconfiguratie. Nieuwe containers/netwerk verwijderd en opnieuw aangemaakt zonder volumeverwijdering: dataset- en historie-digest identiek gebleven; init behield bestaande accounts.
-- Nieuwe beheerder na deze herstart in de browser aangemeld; JSON-naamgeneratie, opslaan en heropenen van `Zelfstandige installatie` geslaagd. Nieuwe tab is ingelogd achtergelaten. Bestaande proef op 19090 bleef actief.
-- Details en beperkingen: docs/STEP2-VERIFICATION.md. Installatie/credentiallocatie: docs/LOCAL-INSTALL.md.
+- Volledige kwaliteitsroute van de schone bron slaagt: lint, types, productiebuild, 124 clienttests, twintig servertests, tien worker-/isolatiechecks en echte API-/account-/SQL-exportproeven. Eén bestaande lege clienttest is overgeslagen.
+- Alle drie actieve instanties hebben na afzonderlijk akkoord een exacte restorevergelijking en echte login-/opslag-/historie-/sessieproeven doorstaan. Bij vergelijking ná de proef zijn alleen verwachte accountvelden last_updated, last_logged_in en refresh_token uitgezonderd.
+- De oorspronkelijke lokale databaseherstelproeven en inhoudsdigests blijven vastgelegd in de bestaande verificatiedocumenten. Geen volledige securityaudit of belastingtest geclaimd.
+- De live terugvalprocedure is voorbereid, maar na succesvolle omschakeling niet opnieuw op de actieve instanties uitgevoerd.
 
-## Risico's en open punten
+## STACK-herstel: actuele stand
 
-- Bètabasis; geen volledige securityaudit of belastingtest; de CI-workflow controleert de ontwikkelbranch op GitHub; de actuele uitvoeringsstatus staat bij de pull request. API-image bevat vooralsnog ook builddependencies.
-- MariaDB 11.4.13 LTS is afzonderlijk getest, inclusief echt herstel en alle applicatiecontroles. De actieve hoofdinstantie draait na aanvullend akkoord op 11.4.13 met een nieuw volume; het oude 10.5-volume en de laatste back-up zijn behouden.
-- E-mail/wachtwoordherstel is lokaal niet ingericht. Lokale configuratie mag niet worden geregenereerd bij een te behouden volume.
-- Qndrs/generatedata is de gekozen publieke fork van benkeen/generatedata; toegang en gemeenschappelijke basis zijn geverifieerd. Publicatie van de gecontroleerde wijzigingen verloopt via een ontwikkelbranch en pull request.
+- Elf foutieve RENAME/Up-verplaatsingen zijn met overeenstemmende cloud-ID's in logs en het gekopieerde journal bevestigd. De verkeerde verplaatsingsherkenning is bewezen; hergebruikte NTFS-mapnummers zonder generatiebits zijn de sterk onderbouwde technische reconstructie van de trigger.
+- Herstelstappen 1–4 zijn uitgevoerd: D: pauzeren, bewijs/back-ups veiligstellen, schone clone en gecontroleerde lokale omschakeling.
+- Herstelstap 5 levert nu een lokaal onderbouwd dossier per verplaatsing en een bestandscatalogus. Op verzoek is de actuele cloud niet live gecontroleerd. Een terugverplaatsing van complete vermengde mappen is niet vrijgegeven.
+- Het vertrouwelijke hersteloverzicht en de bronbewijzen staan buiten Git onder %LOCALAPPDATA%/Qndrs/DatageneratorRecovery/step5-reconstruction-20261026-004010. Alleen de technische samenvatting wordt in deze repository opgenomen.
 
 ## Eerstvolgende stap
 
-Robert beoordeelt de technische review en de herstelde beveiligings-/opslagpaden in pull request #1 na geslaagde GitHub-CI. Geen automatische merge, overname van actieve instanties of productiehandeling.
+Eerst de actuele cloudpaden, prullenbak en eventuele versies alleen-lezen vergelijken met het hersteloverzicht. Daarna een concrete herstelset en conflictlijst laten accorderen vóór enige cloudwijziging. D: blijft gepauzeerd.
 
-## Centrale context
+## Documentatie
 
-WORKING-AGREEMENTS.md, standards/DOCUMENTATION.md en standards/SHARED_GIT_COLLABORATION.md onder ROBERT_AI_HOME. Lokale afspraken zijn zelfstandig leesbaar.
+[Lokale installatie](docs/LOCAL-INSTALL.md), [kwaliteit](docs/QUALITY.md), [STACK-herstel](docs/STACK-RECOVERY.md), [lokale omschakeling](docs/LOCAL-CUTOVER.md), [databaseherstel](docs/DATABASE-RECOVERY.md), [PR-review](docs/PR-REVIEW.md) en [upstreamherkomst](docs/UPSTREAM.md).
 
-## Verificatie en besluiten stap 3
-
-- Accounts blijven voorlopig beheerdergestuurd; geen zelfregistratie of e-mailworkflow toegevoegd.
-- 10.5 → 11.4 en 11.4 → nieuw 11.4-volume logisch hersteld; volledige inhoudsdigests voor accounts, datasets, historie en settings gelijk. Login/opslag/sessies/isolatie en zes authenticatietests slagen op beide herstelde kopieën.
-- Beschadigde dump, niet-leeg doel en bestaand gestopt volume worden geweigerd; de bijbehorende beveiligingen zijn getest. Tools en werkwijze staan in docs/DATABASE-RECOVERY.md; bewijs in docs/STEP3-VERIFICATION.md.
-- Hersteltestcontainers gestopt met behoud van hun volumes en externe back-ups. De actieve hoofdinstantie en oude proef blijven beschikbaar.
-- De automatische goedkeuringscontrole wees de voorgenomen omschakeling van de actieve hoofdinstantie af omdat het akkoord alleen test/herstel expliciet dekte. Robert heeft daarna expliciet akkoord gegeven; de omschakeling is inmiddels uitgevoerd met behoud van het oude volume en de laatste back-up.
-
-## Actieve omschakeling na expliciet akkoord
-
-- Actieve database: MariaDB 11.4.13, volume datagenerator-dev_database114, op dezelfde lokale URL 19091. Oude volume datagenerator-dev_database en originele logische back-up blijven behouden.
-- Volledige inhoudsdigests vóór de applicatietests gelijk aan de laatste bevroren bron. Applicatie-/sessie-/isolatietests en zes authenticatietests slagen; browseraanmelding en bestaande dataset bevestigd na herladen.
-- Rapport en terugvalgrenzen: docs/DATABASE-CUTOVER-2026-10-25.md. Geen productie of GitHub gewijzigd; stap 4 is daarna afzonderlijk geaccordeerd.
-
-## Gebruikersflow stap 4
-
-- Afzonderlijke proef op 127.0.0.2:19094, eigen configuratie/volume; hoofdinstantie 19091 en oude proef 19090 behouden.
-- Duidelijke foutmeldingen, begrensde API-verzoeken, dubbele opslag voorkomen, concepten behouden bij sessieverloop en waarschuwingen vóór verwerpen. Beheerdergestuurde accounts en eerlijk handmatig wachtwoordherstel; geen mailvoorziening toegevoegd.
-- Lint, TypeScript, productiefrontendbuild, 20 gerichte fouttests, API-opslag-/sessiecontroles, accountonboarding en zes authenticatietests slagen. Echte API-uitval en sessieherstel ook in de browser geverifieerd.
-- De twee toen bestaande falende layouttests zijn in stap 5 hersteld; de volledige clienttestsuite slaagt nu. Details en testgrenzen: docs/STEP4-VERIFICATION.md; gebruikersafspraken: docs/USER-FLOW.md.
-
-## Vaste kwaliteitscontrole stap 5
-
-- Eén route: node tools/local.mjs quality, met eigen configuratie, volume en Compose-project; bestaande instanties worden niet overgenomen. De standaardcyclus en een herhaling met bewaarde configuratie/database slagen, inclusief opruimen van de eigen testcontainers.
-- Volledige clienttestsuite: 120 geslaagd; één bestaande lege test overgeslagen. De layouttests en een onvolledig helpdialoogfixture zijn hersteld. Gebouwde worker-/exportcontroles, isolatiecontroles, authenticatie en echte API-/account-/SQL-proeven slagen.
-- JSON-escaping, compacte JSON-batchscheiding en CSV-quotering gecorrigeerd na falende regressietests; geen nieuwe productieafhankelijkheid.
-- GitHub Actions lokaal voorbereid met dezelfde opdracht, vaste actionrevisies en leesrechten; nog niet gepubliceerd of op GitHub gedraaid. Gebruik: docs/QUALITY.md; bewijs en grenzen: docs/STEP5-VERIFICATION.md.
-
-## GitHub-voorbereiding stap 6
-
-- Door Robert aangewezen publieke fork Qndrs/generatedata geverifieerd; lees-/schrijf-/beheertoegang en ingeschakelde Actions bevestigd. Origin lokaal gekoppeld; upstream blijft tegen pushen afgeschermd. Volledige upstreamgeschiedenis beschikbaar, werkbranch en wijzigingen behouden.
-- Geen eigen commit, push, PR of merge uitgevoerd. Plan en grenzen: docs/GITHUB-PREPARATION.md; publiceren en echte GitHub-CI volgen pas na akkoord op stap 7.
-
-## Publicatie stap 7
-
-- Robert heeft publicatie via een ontwikkelbranch en pull request en verificatie van GitHub-CI expliciet geaccordeerd. Branch: codex/project-bootstrap; doelbranch: master van Qndrs/generatedata.
-- Publicatiemanifest vóór de commit opnieuw gecontroleerd; alleen de bedoelde bron, configuratieprofielen, tests en documentatie worden opgenomen. Privécredentials en lokale uitvoer blijven uitgesloten; commitidentiteit gebruikt GitHub-noreply.
-- Actuele review en CI-status: https://github.com/Qndrs/generatedata/pull/1 en https://github.com/Qndrs/generatedata/actions/workflows/quality.yml. Geen merge, deployment of productieverbinding onderdeel van deze publicatiestap.
-
-## Technische PR-review
-
-- Gerichte review uitgevoerd na Roberts akkoord. Historie-invoer gevalideerd en SQL geparametriseerd; databasewrites afgewacht en datasetverwijdering transactioneel gemaakt; vertraagde opslagantwoorden aan hun oorspronkelijke datasetcontext gebonden. Vervaldatumvergelijking en best-effort loginregistratie eveneens gecorrigeerd.
-- Lokaal slagen 124 clienttests en twintig servertests; de eigen API-/SQL-proef slaagt en is opgeruimd. Nieuwe regressies worden standaard door CI uitgevoerd. Bewijs, scope en resterende grenzen: docs/PR-REVIEW.md.
-- Correcties blijven onderdeel van pull request #1; actuele GitHub-CI staat daar. Menselijke review en expliciete beslissing over samenvoegen blijven nodig. Geen productie of actieve lokale instantie gewijzigd.
+De historische GitHub-voorbereidingsnotitie beschrijft de fase vóór publicatie; vermeldingen van toen aangetroffen lokale bestanden bewijzen geen opname in Git.

@@ -20,6 +20,8 @@ Lees eerst dit bestand, PROJECT.md en CONTRIBUTING.md. Deze instructies zijn zel
 
 ## Git en samenwerking
 
+- Houd actieve ontwikkelrepositories en hun .git buiten bidirectionele bestandssynchronisatie zoals STACK. Gebruik Git-remotes voor broncode en afzonderlijke gecontroleerde herstelkopieën voor lokale gegevens.
+
 - Lees CONTRIBUTING.md vóór commits en pushes. Inspecteer bestaande wijzigingen en actuele remote-status vóór nieuw Git-werk; fetch pas wanneer remote-synchronisatie relevant is voor de opdracht.
 - Werk op een herkenbare branch, stage bewust en neem geen werk van anderen mee.
 - De remote upstream is uitsluitend bronreferentie; de push-URL is bewust geblokkeerd. Origin is de Qndrs-fork; pushen en publicatie volgen alleen na expliciet akkoord op de publicatiestap.
