@@ -2,6 +2,8 @@
 
 Datum: 25 oktober 2026. Robert heeft de fork https://github.com/Qndrs/generatedata aangewezen om mee verder te werken.
 
+> Historische voorbereidingsnotitie. Zie [PROJECT.md](../PROJECT.md) voor de actuele projectstatus.
+
 ## Geverifieerd en lokaal ingericht
 
 - De repository is publiek en is daadwerkelijk een GitHub-fork van benkeen/generatedata. De geauthenticeerde gebruiker Qndrs heeft lees-, schrijf- en beheertoegang; zowel connector als GitHub CLI bevestigen de toegang.
@@ -16,7 +18,7 @@ Bedoeld zijn de applicatiecorrecties, vertalingen, publieke configprofielen, can
 
 Uitgesloten zijn echte runtimeconfiguratie, admin-/testcredentials, databases, back-ups, logs, outputs en gegenereerde buildbestanden. De kandidaatbestanden zijn gecontroleerd op private-key-/tokenpatronen en op exacte waarden van de bekende lokale runtimegeheimen. Er zijn daarbij geen treffers gevonden. De controle is gericht op onze nieuwe/gewijzigde bestanden; oorspronkelijke al publieke upstreaminhoud is geen nieuwe Qndrs-publicatie.
 
-Ook uitgesloten, maar op schijf behouden:
+Destijds lokaal aangetroffen en uit Git/Docker uitgesloten (geen repository-inhoud):
 
 - De oude tools/Dockerfile.generatedata-* overlays, check-persistence.cjs en generatedata-trial-smoke.cjs. De canonieke route gebruikt de actuele root-Dockerfile, compose.yaml en tools/local.mjs.
 

@@ -4,6 +4,8 @@ Lokale doorontwikkeling van Ben Keens Generatedata voor realistische demonstrati
 
 ## Lokale installatie
 
+De ontwikkelbron en de beheerroute van de drie lokale instanties staan op C:/Projects/datagenerator, buiten STACK. De gecontroleerde omschakeling behoudt accounts, datasets en dezelfde adressen. Zie [lokaal beheer en terugval](docs/LOCAL-CUTOVER.md).
+
 Vereist: Node.js 24 en Docker met Linux-containers en een recente Compose-versie.
 
 ```powershell
